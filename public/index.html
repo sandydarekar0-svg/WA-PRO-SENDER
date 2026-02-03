@@ -407,3 +407,745 @@ Use {Hi|Hello|Hey} for spintax"></textarea>
                                         <label class="block text-sm font-medium text-gray-400 mb-2">Message Template</label>
                                         <select id="bulk-template" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" onchange="loadBulkTemplate()">
                                             <option value="">Select a template or write
+<!-- Continue from where it was cut off -->
+                                            <option value="">Select a template or write custom...</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Message -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-400 mb-2">Message Content</label>
+                                        <textarea id="bulk-message" rows="6" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Enter your message...
+
+Variables: {{name}}, {{phone}}, {{var1}}, {{var2}}
+Spintax: {Hello|Hi|Hey} {{name}}!"></textarea>
+                                    </div>
+
+                                    <!-- Media -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-400 mb-2">Attach Media</label>
+                                        <select id="bulk-media-type" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" onchange="toggleBulkMedia()">
+                                            <option value="none">No Media</option>
+                                            <option value="image">Image</option>
+                                            <option value="video">Video</option>
+                                            <option value="document">Document</option>
+                                        </select>
+                                    </div>
+
+                                    <div id="bulk-media-url-container" class="hidden">
+                                        <label class="block text-sm font-medium text-gray-400 mb-2">Media URL</label>
+                                        <input type="url" id="bulk-media-url" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="https://example.com/image.jpg">
+                                    </div>
+
+                                    <!-- Delay Settings -->
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-400 mb-2">Min Delay (seconds)</label>
+                                            <input type="number" id="min-delay" value="3" min="1" max="60" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-400 mb-2">Max Delay (seconds)</label>
+                                            <input type="number" id="max-delay" value="8" min="1" max="120" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center space-x-4">
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="checkbox" id="use-spintax" class="form-checkbox h-5 w-5 text-green-500 rounded">
+                                            <span>Enable Spintax</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="checkbox" id="validate-numbers" class="form-checkbox h-5 w-5 text-green-500 rounded">
+                                            <span>Validate Numbers First</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex space-x-4">
+                                <button onclick="startBulkSend()" id="start-bulk-btn" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center space-x-2">
+                                    <i class="fas fa-rocket"></i>
+                                    <span>Start Sending</span>
+                                </button>
+                                <button onclick="pauseBulkSend()" id="pause-bulk-btn" class="hidden flex-1 bg-yellow-600 text-white py-4 rounded-lg font-semibold hover:bg-yellow-700 transition-all flex items-center justify-center space-x-2">
+                                    <i class="fas fa-pause"></i>
+                                    <span>Pause</span>
+                                </button>
+                                <button onclick="stopBulkSend()" id="stop-bulk-btn" class="hidden px-8 bg-red-600 text-white py-4 rounded-lg font-semibold hover:bg-red-700 transition-all">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Panel -->
+                        <div class="space-y-6">
+                            <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                                <h3 class="text-lg font-semibold mb-4">Sending Progress</h3>
+                                
+                                <div class="text-center mb-6">
+                                    <div class="relative w-32 h-32 mx-auto">
+                                        <svg class="w-32 h-32 transform -rotate-90">
+                                            <circle cx="64" cy="64" r="56" stroke="#374151" stroke-width="8" fill="none"/>
+                                            <circle id="progress-circle" cx="64" cy="64" r="56" stroke="#10B981" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="352" stroke-dashoffset="352"/>
+                                        </svg>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span id="progress-percent" class="text-2xl font-bold">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-400">Total</span>
+                                        <span id="bulk-total">0</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-400">Sent</span>
+                                        <span id="bulk-sent" class="text-green-500">0</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-400">Failed</span>
+                                        <span id="bulk-failed" class="text-red-500">0</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-400">Remaining</span>
+                                        <span id="bulk-remaining">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Live Log -->
+                            <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                                <h3 class="text-lg font-semibold mb-4">Live Log</h3>
+                                <div id="bulk-log" class="h-64 overflow-y-auto space-y-2 text-sm font-mono bg-gray-900 rounded-lg p-4">
+                                    <p class="text-gray-500">Waiting to start...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contacts Section -->
+                <section id="section-contacts" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex space-x-4">
+                            <button onclick="showContactsTab('all')" class="contacts-tab active px-4 py-2 bg-green-600 rounded-lg" data-tab="all">All Contacts</button>
+                            <button onclick="showContactsTab('groups')" class="contacts-tab px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600" data-tab="groups">Groups</button>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="showImportModal()" class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-upload mr-2"></i>Import
+                            </button>
+                            <button onclick="exportContacts()" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                            <button onclick="showAddContactModal()" class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Add Contact
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contacts Tab -->
+                    <div id="contacts-all-tab">
+                        <div class="bg-gray-800 rounded-xl border border-gray-700">
+                            <div class="p-4 border-b border-gray-700 flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <input type="text" id="contact-search" class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-green-500" placeholder="Search contacts..." onkeyup="searchContacts()">
+                                    <select id="contact-group-filter" class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2" onchange="filterContacts()">
+                                        <option value="">All Groups</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="validateSelectedContacts()" class="px-3 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 text-sm">
+                                        <i class="fas fa-check-circle mr-1"></i>Validate
+                                    </button>
+                                    <button onclick="deleteSelectedContacts()" class="px-3 py-2 bg-red-600 rounded-lg hover:bg-red-700 text-sm">
+                                        <i class="fas fa-trash mr-1"></i>Delete
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-gray-700">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left">
+                                                <input type="checkbox" id="select-all-contacts" onchange="toggleAllContacts()">
+                                            </th>
+                                            <th class="px-4 py-3 text-left">Phone</th>
+                                            <th class="px-4 py-3 text-left">Name</th>
+                                            <th class="px-4 py-3 text-left">Group</th>
+                                            <th class="px-4 py-3 text-left">Status</th>
+                                            <th class="px-4 py-3 text-left">Last Contacted</th>
+                                            <th class="px-4 py-3 text-left">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="contacts-table-body">
+                                        <tr>
+                                            <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+                                                No contacts found. Import or add contacts to get started.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="p-4 border-t border-gray-700 flex items-center justify-between">
+                                <span id="contacts-count" class="text-sm text-gray-400">0 contacts</span>
+                                <div id="contacts-pagination" class="flex space-x-2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Groups Tab -->
+                    <div id="contacts-groups-tab" class="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div onclick="showCreateGroupModal()" class="bg-gray-800 rounded-xl border-2 border-dashed border-gray-600 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-green-500 transition-colors min-h-40">
+                                <i class="fas fa-plus text-3xl text-gray-400 mb-2"></i>
+                                <span class="text-gray-400">Create New Group</span>
+                            </div>
+                            <div id="groups-container">
+                                <!-- Groups will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Templates Section -->
+                <section id="section-templates" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Message Templates</h3>
+                        <button onclick="showCreateTemplateModal()" class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Create Template
+                        </button>
+                    </div>
+
+                    <div id="templates-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Templates will be loaded here -->
+                    </div>
+                </section>
+
+                <!-- Campaigns Section -->
+                <section id="section-campaigns" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Campaigns</h3>
+                        <button onclick="showCreateCampaignModal()" class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Create Campaign
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-xl border border-gray-700">
+                        <div class="p-4 border-b border-gray-700">
+                            <div class="flex space-x-2">
+                                <button onclick="filterCampaigns('all')" class="campaign-filter active px-4 py-2 bg-green-600 rounded-lg" data-filter="all">All</button>
+                                <button onclick="filterCampaigns('running')" class="campaign-filter px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600" data-filter="running">Running</button>
+                                <button onclick="filterCampaigns('scheduled')" class="campaign-filter px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600" data-filter="scheduled">Scheduled</button>
+                                <button onclick="filterCampaigns('completed')" class="campaign-filter px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600" data-filter="completed">Completed</button>
+                            </div>
+                        </div>
+                        <div id="campaigns-list" class="p-6">
+                            <p class="text-gray-400 text-center py-8">No campaigns found</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- API Keys Section -->
+                <section id="section-api-keys" class="section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold">API Keys</h3>
+                            <p class="text-sm text-gray-400">Manage API access for external integrations</p>
+                        </div>
+                        <button onclick="showCreateApiKeyModal()" class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Generate New Key
+                        </button>
+                    </div>
+
+                    <!-- API Documentation -->
+                    <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+                        <h4 class="font-semibold mb-4">Quick API Reference</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <code class="text-green-400">POST /api/external/v1/message/send</code>
+                                <p class="text-gray-400 mt-2">Send a single message</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <code class="text-green-400">POST /api/external/v1/message/send-bulk</code>
+                                <p class="text-gray-400 mt-2">Send bulk messages</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <code class="text-green-400">GET /api/external/v1/message/:id/status</code>
+                                <p class="text-gray-400 mt-2">Get message status</p>
+                            </div>
+                            <div class="bg-gray-700 rounded-lg p-4">
+                                <code class="text-green-400">POST /api/external/v1/number/check</code>
+                                <p class="text-gray-400 mt-2">Validate WhatsApp number</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-4 bg-gray-900 rounded-lg">
+                            <p class="text-gray-400 mb-2">Headers required:</p>
+                            <code class="text-yellow-400">X-API-Key: your_api_key</code><br>
+                            <code class="text-yellow-400">X-API-Secret: your_api_secret</code>
+                        </div>
+                    </div>
+
+                    <!-- API Keys List -->
+                    <div class="bg-gray-800 rounded-xl border border-gray-700">
+                        <div class="p-4 border-b border-gray-700">
+                            <h4 class="font-semibold">Your API Keys</h4>
+                        </div>
+                        <div id="api-keys-list" class="p-6">
+                            <p class="text-gray-400 text-center py-8">No API keys generated yet</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Analytics Section -->
+                <section id="section-analytics" class="section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <!-- Message Stats Chart -->
+                        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold mb-4">Messages Over Time</h3>
+                            <canvas id="messages-chart" height="200"></canvas>
+                        </div>
+
+                        <!-- Delivery Rate -->
+                        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold mb-4">Delivery Statistics</h3>
+                            <canvas id="delivery-chart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Message History -->
+                    <div class="bg-gray-800 rounded-xl border border-gray-700">
+                        <div class="p-4 border-b border-gray-700 flex items-center justify-between">
+                            <h3 class="font-semibold">Message History</h3>
+                            <div class="flex space-x-2">
+                                <select id="history-status-filter" class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm" onchange="loadMessageHistory()">
+                                    <option value="">All Status</option>
+                                    <option value="sent">Sent</option>
+                                    <option value="delivered">Delivered</option>
+                                    <option value="read">Read</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                                <button onclick="exportMessageHistory()" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 text-sm">
+                                    <i class="fas fa-download mr-1"></i>Export
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-700">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left">Phone</th>
+                                        <th class="px-4 py-3 text-left">Message</th>
+                                        <th class="px-4 py-3 text-left">Status</th>
+                                        <th class="px-4 py-3 text-left">Source</th>
+                                        <th class="px-4 py-3 text-left">Sent At</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-4 border-t border-gray-700">
+                            <div id="history-pagination" class="flex justify-center space-x-2">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="section-settings" class="section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- WhatsApp Connection -->
+                        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold mb-6">WhatsApp Connection</h3>
+                            
+                            <div id="wa-disconnected" class="text-center">
+                                <div id="qr-container" class="mb-6">
+                                    <div class="w-64 h-64 bg-white rounded-xl mx-auto flex items-center justify-center">
+                                        <div id="qr-code-display" class="hidden">
+                                            <img id="qr-image" src="" alt="QR Code" class="w-full h-full">
+                                        </div>
+                                        <div id="qr-loading" class="text-gray-800">
+                                            <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                                            <p>Generating QR Code...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-gray-400 mb-4">Scan QR code with WhatsApp to connect</p>
+                                <button onclick="connectWhatsApp()" class="px-6 py-3 bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
+                                    <i class="fab fa-whatsapp mr-2"></i>Connect WhatsApp
+                                </button>
+                            </div>
+
+                            <div id="wa-connected" class="hidden text-center">
+                                <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fab fa-whatsapp text-5xl"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-green-500 mb-2">Connected</h4>
+                                <p id="connected-number" class="text-gray-400 mb-6">+1234567890</p>
+                                <button onclick="disconnectWhatsApp()" class="px-6 py-3 bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+                                    <i class="fas fa-unlink mr-2"></i>Disconnect
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Account Settings -->
+                        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold mb-6">Account Settings</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Name</label>
+                                    <input type="text" id="settings-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                                    <input type="email" id="settings-email" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Plan</label>
+                                    <div class="flex items-center justify-between bg-gray-700 rounded-lg px-4 py-3">
+                                        <span id="settings-plan">Free</span>
+                                        <button class="text-green-500 hover:underline text-sm">Upgrade</button>
+                                    </div>
+                                </div>
+                                <button onclick="updateProfile()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Message Settings -->
+                        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold mb-6">Message Settings</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Default Min Delay (seconds)</label>
+                                    <input type="number" id="default-min-delay" value="3" min="1" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Default Max Delay (seconds)</label>
+                                    <input type="number" id="default-max-delay" value="8" min="1" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Batch Size</label>
+                                    <input type="number" id="batch-size" value="50" min="10" max="100" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Timezone</label>
+                                    <select id="timezone" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                        <option value="UTC">UTC</option>
+                                        <option value="America/New_York">Eastern Time</option>
+                                        <option value="America/Los_Angeles">Pacific Time</option>
+                                        <option value="Europe/London">London</option>
+                                        <option value="Asia/Kolkata">India</option>
+                                    </select>
+                                </div>
+                                <button onclick="saveMessageSettings()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Change Password -->
+                        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold mb-6">Change Password</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Current Password</label>
+                                    <input type="password" id="current-password" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">New Password</label>
+                                    <input type="password" id="new-password" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Confirm New Password</label>
+                                    <input type="password" id="confirm-password" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                                </div>
+                                <button onclick="changePassword()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+                                    Update Password
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Contact Modal -->
+    <div id="add-contact-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold">Add Contact</h3>
+                <button onclick="closeModal('add-contact-modal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Phone Number *</label>
+                    <input type="text" id="new-contact-phone" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="With country code">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Name</label>
+                    <input type="text" id="new-contact-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <input type="email" id="new-contact-email" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Group</label>
+                    <select id="new-contact-group" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                        <option value="">No Group</option>
+                    </select>
+                </div>
+                <button onclick="addContact()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+                    Add Contact
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="import-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold">Import Contacts</h3>
+                <button onclick="closeModal('import-modal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center">
+                    <input type="file" id="import-file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelect(event)">
+                    <label for="import-file" class="cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4 block"></i>
+                        <p class="text-gray-400">Click to upload or drag and drop</p>
+                        <p class="text-sm text-gray-500 mt-2">XLSX, XLS, CSV (Max 10MB)</p>
+                    </label>
+                </div>
+                <div id="import-file-name" class="hidden text-sm text-green-500"></div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Import to Group</label>
+                    <select id="import-group" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                        <option value="">No Group</option>
+                    </select>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4 text-sm">
+                    <p class="text-gray-400 mb-2">File should have columns:</p>
+                    <code class="text-green-400">phone, name, email, var1, var2</code>
+                </div>
+                <button onclick="importContacts()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+                    Import Contacts
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Template Modal -->
+    <div id="create-template-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center overflow-y-auto">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-2xl mx-4 my-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold">Create Template</h3>
+                <button onclick="closeModal('create-template-modal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Template Name *</label>
+                        <input type="text" id="template-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Category</label>
+                        <select id="template-category" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                            <option value="general">General</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="notification">Notification</option>
+                            <option value="support">Support</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Message Content *</label>
+                    <textarea id="template-content" rows="6" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Use {{name}}, {{phone}} for variables
+Use {Hello|Hi|Hey} for spintax"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Media Type</label>
+                        <select id="template-media-type" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" onchange="toggleTemplateMedia()">
+                            <option value="none">None</option>
+                            <option value="image">Image</option>
+                            <option value="video">Video</option>
+                            <option value="document">Document</option>
+                        </select>
+                    </div>
+                    <div id="template-media-url-container" class="hidden">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Media URL</label>
+                        <input type="url" id="template-media-url" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Footer (Optional)</label>
+                    <input type="text" id="template-footer" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Footer text">
+                </div>
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="template-spintax" class="form-checkbox h-5 w-5 text-green-500 rounded">
+                        <span>Enable Spintax</span>
+                    </label>
+                </div>
+                <button onclick="createTemplate()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+                    Create Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create API Key Modal -->
+    <div id="create-api-key-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold">Generate API Key</h3>
+                <button onclick="closeModal('create-api-key-modal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Key Name *</label>
+                    <input type="text" id="api-key-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="e.g., Production API">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Permissions</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="send_message" class="api-permission" checked>
+                            <span>Send Message</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="send_bulk" class="api-permission">
+                            <span>Send Bulk Messages</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="get_status" class="api-permission" checked>
+                            <span>Get Message Status</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="check_number" class="api-permission">
+                            <span>Check Number</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Rate Limit (requests/minute)</label>
+                    <input type="number" id="api-rate-limit" value="100" min="10" max="1000" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Webhook URL (Optional)</label>
+                    <input type="url" id="api-webhook-url" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="https://yoursite.com/webhook">
+                </div>
+                <button onclick="generateApiKey()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+                    Generate Key
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Result Modal -->
+    <div id="api-key-result-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-lg mx-4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold">API Key Generated!</h3>
+                <p class="text-sm text-gray-400 mt-2">Save these credentials. The secret will only be shown once.</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">API Key</label>
+                    <div class="flex">
+                        <input type="text" id="generated-api-key" class="flex-1 bg-gray-700 border border-gray-600 rounded-l-lg px-4 py-3" readonly>
+                        <button onclick="copyToClipboard('generated-api-key')" class="px-4 bg-gray-600 rounded-r-lg hover:bg-gray-500">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">API Secret</label>
+                    <div class="flex">
+                        <input type="text" id="generated-api-secret" class="flex-1 bg-gray-700 border border-gray-600 rounded-l-lg px-4 py-3" readonly>
+                        <button onclick="copyToClipboard('generated-api-secret')" class="px-4 bg-gray-600 rounded-r-lg hover:bg-gray-500">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-yellow-900 border border-yellow-700 rounded-lg p-4">
+                    <p class="text-yellow-400 text-sm">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Store these credentials securely. The secret cannot be retrieved later.
+                    </p>
+                </div>
+                <button onclick="closeModal('api-key-result-modal')" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div id="create-group-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold">Create Group</h3>
+                <button onclick="closeModal('create-group-modal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Group Name *</label>
+                    <input type="text" id="group-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                    <textarea id="group-description" rows="3" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Color</label>
+                    <div class="flex space-x-2">
+                        <button onclick="selectGroupColor('#3498db')" class="group-color-btn w-8 h-8 rounded-full bg-blue-500 border-2 border-transparent"></button>
+                        <button onclick="selectGroupColor('#e74c3c')" class="group-color-btn w-8 h-8 rounded-full bg-red-500 border-2 border-transparent"></button>
+                        <button onclick="selectGroupColor('#2ecc71')" class="group-color-btn w-8 h-8 rounded-full bg-green-500 border-2 border-transparent"></button>
+                        <button onclick="selectGroupColor('#f39c12')" class="group-color-btn w-8 h-8 rounded-full bg-yellow-500 border-2 border-transparent"></button>
+                        <button onclick="selectGroupColor('#9b59b6')" class="group-color-btn w-8 h-8 rounded-full bg-purple-500 border-2 border-transparent"></button>
+                        <button onclick="selectGroupColor('#1abc9c')" class="group-color-btn w-8 h-8 rounded-full bg-teal-500 border-2 border-transparent"></button>
+                    </div>
+                    <input type="hidden" id="group-color" value="#3498db">
+                </div>
+                <button onclick="createGroup()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all">
+                    Create Group
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
