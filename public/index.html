@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bulk Sender Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p class="text-gray-400">Loading WhatsApp Bulk Sender...</p>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden flex items-center justify-center">
+        <div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md mx-4 transform transition-all">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fab fa-whatsapp text-4xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold">WhatsApp Bulk Sender</h1>
+                <p class="text-gray-400 mt-2">Professional Messaging Platform</p>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <input type="email" id="login-email" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Enter your email">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                    <input type="password" id="login-password" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Enter your password">
+                </div>
+                <button onclick="login()" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all">
+                    Sign In
+                </button>
+                <p class="text-center mt-4 text-gray-400">
+                    Don't have an account? <a href="#" onclick="showRegister()" class="text-green-500 hover:underline">Sign Up</a>
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
+                    <input type="text" id="register-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Enter your name">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <input type="email" id="register-email" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Enter your email">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                    <input type="password" id="register-password" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Create a password">
+                </div>
+                <button onclick="register()" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all">
+                    Create Account
+                </button>
+                <p class="text-center mt-4 text-gray-400">
+                    Already have an account? <a href="#" onclick="showLogin()" class="text-green-500 hover:underline">Sign In</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="main-app" class="hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-gray-800 border-r border-gray-700 z-30 transform -translate-x-full md:translate-x-0 transition-transform">
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                        <i class="fab fa-whatsapp text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold">WA Sender Pro</h1>
+                        <p class="text-xs text-gray-400">v2.0.0</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" onclick="showSection('dashboard')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors" data-section="dashboard">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('send-message')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors" data-section="send-message">
+                            <i class="fas fa-paper-plane w-5"></i>
+                            <span>Send Message</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('bulk-sender')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors" data-section="bulk-sender">
+                            <i class="fas fa-rocket w-5"></i>
+                            <span>Bulk Sender</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('contacts')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors" data-section="contacts">
+                            <i class="fas fa-address-book w-5"></i>
+                            <span>Contacts</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('templates')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors" data-section="templates">
+                            <i class="fas fa-file-alt w-5"></i>
+                            <span>Templates</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('campaigns')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors" data-section="campaigns">
+                            <i class="fas fa-bullhorn w-5"></i>
+                            <span>Campaigns</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('api-keys')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors" data-section="api-keys">
+                            <i class="fas fa-key w-5"></i>
+                            <span>API Keys</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('analytics')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors" data-section="analytics">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('settings')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors" data-section="settings">
+                            <i class="fas fa-cog w-5"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- WhatsApp Status -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700">
+                <div id="wa-status" class="flex items-center justify-between p-3 bg-gray-700 rounded-lg cursor-pointer" onclick="showSection('settings')">
+                    <div class="flex items-center space-x-3">
+                        <div id="wa-status-dot" class="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span id="wa-status-text" class="text-sm">Disconnected</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="md:ml-64 min-h-screen">
+            <!-- Header -->
+            <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h2 id="page-title" class="text-xl font-semibold">Dashboard</h2>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="user-info" class="flex items-center space-x-3">
+                        <span id="user-name" class="text-sm text-gray-400"></span>
+                        <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="text-gray-400 hover:text-white" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Sections -->
+            <div class="p-6">
+                <!-- Dashboard Section -->
+                <section id="section-dashboard" class="section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Stats Cards -->
+                        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-green-500 bg-opacity-20 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-paper-plane text-green-500 text-xl"></i>
+                                </div>
+                                <span class="text-green-500 text-sm font-medium">Today</span>
+                            </div>
+                            <h3 class="text-3xl font-bold" id="stat-today-messages">0</h3>
+                            <p class="text-gray-400 text-sm mt-1">Messages Sent</p>
+                        </div>
+
+                        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-blue-500 bg-opacity-20 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-check-double text-blue-500 text-xl"></i>
+                                </div>
+                                <span class="text-blue-500 text-sm font-medium">Total</span>
+                            </div>
+                            <h3 class="text-3xl font-bold" id="stat-total-messages">0</h3>
+                            <p class="text-gray-400 text-sm mt-1">All Time Messages</p>
+                        </div>
+
+                        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-purple-500 bg-opacity-20 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-users text-purple-500 text-xl"></i>
+                                </div>
+                                <span class="text-purple-500 text-sm font-medium">Total</span>
+                            </div>
+                            <h3 class="text-3xl font-bold" id="stat-contacts">0</h3>
+                            <p class="text-gray-400 text-sm mt-1">Contacts</p>
+                        </div>
+
+                        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-yellow-500 bg-opacity-20 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-bullhorn text-yellow-500 text-xl"></i>
+                                </div>
+                                <span class="text-yellow-500 text-sm font-medium">Active</span>
+                            </div>
+                            <h3 class="text-3xl font-bold" id="stat-campaigns">0</h3>
+                            <p class="text-gray-400 text-sm mt-1">Campaigns</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                            <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="showSection('send-message')" class="flex flex-col items-center p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-paper-plane text-2xl text-green-500 mb-2"></i>
+                                    <span class="text-sm">Send Message</span>
+                                </button>
+                                <button onclick="showSection('bulk-sender')" class="flex flex-col items-center p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-rocket text-2xl text-blue-500 mb-2"></i>
+                                    <span class="text-sm">Bulk Send</span>
+                                </button>
+                                <button onclick="showSection('contacts')" class="flex flex-col items-center p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-upload text-2xl text-purple-500 mb-2"></i>
+                                    <span class="text-sm">Import Contacts</span>
+                                </button>
+                                <button onclick="showSection('templates')" class="flex flex-col items-center p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-plus text-2xl text-yellow-500 mb-2"></i>
+                                    <span class="text-sm">New Template</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Usage Limits -->
+                        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                            <h3 class="text-lg font-semibold mb-4">Usage Limits</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-400">Daily Messages</span>
+                                        <span id="limit-daily">0 / 100</span>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-2">
+                                        <div id="limit-daily-bar" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-400">Monthly Messages</span>
+                                        <span id="limit-monthly">0 / 3000</span>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-2">
+                                        <div id="limit-monthly-bar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="bg-gray-800 rounded-xl border border-gray-700">
+                        <div class="p-6 border-b border-gray-700">
+                            <h3 class="text-lg font-semibold">Recent Messages</h3>
+                        </div>
+                        <div class="p-6">
+                            <div id="recent-messages" class="space-y-4">
+                                <p class="text-gray-400 text-center py-8">No recent messages</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Send Message Section -->
+                <section id="section-send-message" class="section hidden">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold mb-6">Send Single Message</h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Phone Number</label>
+                                    <div class="flex space-x-2">
+                                        <input type="text" id="single-phone" class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Enter phone with country code (e.g., 1234567890)">
+                                        <button onclick="checkNumber()" class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                                            <i class="fas fa-check-circle"></i> Check
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Template (Optional)</label>
+                                    <select id="single-template" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" onchange="loadTemplate()">
+                                        <option value="">Select a template...</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Message</label>
+                                    <textarea id="single-message" rows="6" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Enter your message here...
+
+Use {{name}}, {{phone}} for variables
+Use {Hi|Hello|Hey} for spintax"></textarea>
+                                    <div class="flex justify-between mt-2">
+                                        <span class="text-sm text-gray-400">Variables: {{name}}, {{phone}}</span>
+                                        <span id="char-count" class="text-sm text-gray-400">0 characters</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Media (Optional)</label>
+                                    <div class="grid grid-cols-4 gap-4">
+                                        <button onclick="setMediaType('none')" class="media-type-btn active p-4 bg-gray-700 rounded-lg border-2 border-transparent hover:border-green-500 transition-colors" data-type="none">
+                                            <i class="fas fa-ban text-xl mb-2 block"></i>
+                                            <span class="text-sm">None</span>
+                                        </button>
+                                        <button onclick="setMediaType('image')" class="media-type-btn p-4 bg-gray-700 rounded-lg border-2 border-transparent hover:border-green-500 transition-colors" data-type="image">
+                                            <i class="fas fa-image text-xl mb-2 block"></i>
+                                            <span class="text-sm">Image</span>
+                                        </button>
+                                        <button onclick="setMediaType('video')" class="media-type-btn p-4 bg-gray-700 rounded-lg border-2 border-transparent hover:border-green-500 transition-colors" data-type="video">
+                                            <i class="fas fa-video text-xl mb-2 block"></i>
+                                            <span class="text-sm">Video</span>
+                                        </button>
+                                        <button onclick="setMediaType('document')" class="media-type-btn p-4 bg-gray-700 rounded-lg border-2 border-transparent hover:border-green-500 transition-colors" data-type="document">
+                                            <i class="fas fa-file text-xl mb-2 block"></i>
+                                            <span class="text-sm">Document</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="media-url-container" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Media URL</label>
+                                    <input type="url" id="single-media-url" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Enter media URL">
+                                </div>
+
+                                <button onclick="sendSingleMessage()" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center space-x-2">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span>Send Message</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Bulk Sender Section -->
+                <section id="section-bulk-sender" class="section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Configuration -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                                <h3 class="text-lg font-semibold mb-6">Bulk Message Configuration</h3>
+                                
+                                <div class="space-y-6">
+                                    <!-- Recipients Selection -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-400 mb-2">Select Recipients</label>
+                                        <div class="grid grid-cols-2 gap-4 mb-4">
+                                            <button onclick="selectRecipientType('groups')" class="recipient-type-btn active p-4 bg-gray-700 rounded-lg border-2 border-green-500 text-center" data-type="groups">
+                                                <i class="fas fa-users text-xl mb-2 block text-green-500"></i>
+                                                <span>From Groups</span>
+                                            </button>
+                                            <button onclick="selectRecipientType('manual')" class="recipient-type-btn p-4 bg-gray-700 rounded-lg border-2 border-transparent text-center" data-type="manual">
+                                                <i class="fas fa-list text-xl mb-2 block"></i>
+                                                <span>Manual Entry</span>
+                                            </button>
+                                        </div>
+
+                                        <div id="groups-selection">
+                                            <select id="bulk-groups" multiple class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500 h-32">
+                                            </select>
+                                            <p class="text-sm text-gray-400 mt-2">Hold Ctrl/Cmd to select multiple groups</p>
+                                        </div>
+
+                                        <div id="manual-entry" class="hidden">
+                                            <textarea id="bulk-numbers" rows="6" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" placeholder="Enter phone numbers, one per line..."></textarea>
+                                            <p class="text-sm text-gray-400 mt-2">One number per line, with country code</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Template Selection -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-400 mb-2">Message Template</label>
+                                        <select id="bulk-template" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500" onchange="loadBulkTemplate()">
+                                            <option value="">Select a template or write
