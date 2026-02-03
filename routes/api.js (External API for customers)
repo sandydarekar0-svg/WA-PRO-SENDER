@@ -1,0 +1,350 @@
+const express = require('express');
+const router = express.Router();
+const crypto = require('crypto');
+const { apiKeyMiddleware } = require('../middleware/apiKey');
+const { authMiddleware } = require('../middleware/auth');
+const db = require('../config/database');
+
+// ============ API KEY MANAGEMENT ============
+
+// Get user's API keys
+router.get('/keys', authMiddleware, async (req, res) => {
+    try {
+        const keys = await db.ApiKey.findAll({
+            where: { userId: req.user.id },
+            attributes: { exclude: ['secret'] }
+        });
+        res.json({ success: true, keys });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Generate new API key
+router.post('/keys', authMiddleware, async (req, res) => {
+    try {
+        const { name, permissions, rateLimit, expiresAt, allowedIps, webhookUrl } = req.body;
+
+        const key = `wba_${crypto.randomBytes(24).toString('hex')}`;
+        const secretRaw = crypto.randomBytes(32).toString('hex');
+        const secret = crypto.createHash('sha256').update(secretRaw).digest('hex');
+
+        const apiKey = await db.ApiKey.create({
+            userId: req.user.id,
+            name,
+            key,
+            secret,
+            permissions: permissions || ['send_message', 'get_status'],
+            rateLimit: rateLimit || 100,
+            expiresAt,
+            allowedIps: allowedIps || [],
+            webhookUrl
+        });
+
+        res.status(201).json({ 
+            success: true, 
+            apiKey: {
+                ...apiKey.toJSON(),
+                secret: secretRaw // Only show secret once
+            },
+            warning: 'Save the secret now. It will not be shown again.'
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Revoke API key
+router.delete('/keys/:id', authMiddleware, async (req, res) => {
+    try {
+        const apiKey = await db.ApiKey.findOne({
+            where: { id: req.params.id, userId: req.user.id }
+        });
+        
+        if (!apiKey) {
+            return res.status(404).json({ error: 'API key not found' });
+        }
+
+        await apiKey.destroy();
+        res.json({ success: true, message: 'API key revoked' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update API key
+router.put('/keys/:id', authMiddleware, async (req, res) => {
+    try {
+        const apiKey = await db.ApiKey.findOne({
+            where: { id: req.params.id, userId: req.user.id }
+        });
+        
+        if (!apiKey) {
+            return res.status(404).json({ error: 'API key not found' });
+        }
+
+        const { name, permissions, rateLimit, isActive, allowedIps, webhookUrl } = req.body;
+        await apiKey.update({ name, permissions, rateLimit, isActive, allowedIps, webhookUrl });
+
+        res.json({ success: true, apiKey });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ============ EXTERNAL API ENDPOINTS ============
+
+// Send message via API
+router.post('/v1/message/send', apiKeyMiddleware, async (req, res) => {
+    try {
+        if (!req.apiKey.permissions.includes('send_message')) {
+            return res.status(403).json({ error: 'Permission denied' });
+        }
+
+        const { phone, message, mediaType, mediaUrl } = req.body;
+
+        const instance = global.whatsappInstances.get(req.user.id);
+        if (!instance || !instance.isConnected) {
+            return res.status(400).json({ error: 'WhatsApp not connected' });
+        }
+
+        // Check limits
+        if (req.user.messagesUsedToday >= req.user.dailyLimit) {
+            return res.status(429).json({ error: 'Daily limit reached' });
+        }
+
+        const result = await instance.sendMessage(phone, message, { mediaType, mediaUrl });
+
+        // Save message
+        const messageRecord = await db.Message.create({
+            userId: req.user.id,
+            phone,
+            message,
+            mediaType,
+            mediaUrl,
+            status: 'sent',
+            whatsappMessageId: result.messageId,
+            sentAt: new Date(),
+            source: 'api'
+        });
+
+        // Update usage
+        await req.user.update({
+            messagesUsedToday: req.user.messagesUsedToday + 1,
+            messagesUsedMonth: req.user.messagesUsedMonth + 1
+        });
+
+        // Trigger webhook if configured
+        if (req.apiKey.webhookUrl) {
+            triggerWebhook(req.apiKey.webhookUrl, 'message.sent', {
+                messageId: messageRecord.id,
+                phone,
+                status: 'sent'
+            });
+        }
+
+        res.json({
+            success: true,
+            messageId: messageRecord.id,
+            whatsappMessageId: result.messageId
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Send bulk messages via API
+router.post('/v1/message/send-bulk', apiKeyMiddleware, async (req, res) => {
+    try {
+        if (!req.apiKey.permissions.includes('send_bulk')) {
+            return res.status(403).json({ error: 'Permission denied' });
+        }
+
+        const { messages } = req.body;
+
+        if (!Array.isArray(messages) || messages.length === 0) {
+            return res.status(400).json({ error: 'Messages array required' });
+        }
+
+        const instance = global.whatsappInstances.get(req.user.id);
+        if (!instance || !instance.isConnected) {
+            return res.status(400).json({ error: 'WhatsApp not connected' });
+        }
+
+        // Create batch ID
+        const batchId = crypto.randomUUID();
+
+        // Queue messages
+        for (const msg of messages) {
+            await db.Message.create({
+                userId: req.user.id,
+                phone: msg.phone,
+                message: msg.message,
+                mediaType: msg.mediaType,
+                mediaUrl: msg.mediaUrl,
+                status: 'pending',
+                source: 'api'
+            });
+        }
+
+        res.json({
+            success: true,
+            batchId,
+            totalMessages: messages.length,
+            message: 'Messages queued for sending'
+        });
+
+        // Process in background
+        instance.sendBulkMessages(messages, { minDelay: 3000, maxDelay: 8000 });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get message status
+router.get('/v1/message/:id/status', apiKeyMiddleware, async (req, res) => {
+    try {
+        if (!req.apiKey.permissions.includes('get_status')) {
+            return res.status(403).json({ error: 'Permission denied' });
+        }
+
+        const message = await db.Message.findOne({
+            where: { id: req.params.id, userId: req.user.id }
+        });
+
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        res.json({
+            success: true,
+            message: {
+                id: message.id,
+                phone: message.phone,
+                status: message.status,
+                sentAt: message.sentAt,
+                deliveredAt: message.deliveredAt,
+                readAt: message.readAt,
+                error: message.errorMessage
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Check number validity
+router.post('/v1/number/check', apiKeyMiddleware, async (req, res) => {
+    try {
+        if (!req.apiKey.permissions.includes('check_number')) {
+            return res.status(403).json({ error: 'Permission denied' });
+        }
+
+        const { phone } = req.body;
+
+        const instance = global.whatsappInstances.get(req.user.id);
+        if (!instance || !instance.isConnected) {
+            return res.status(400).json({ error: 'WhatsApp not connected' });
+        }
+
+        const exists = await instance.checkNumber(phone);
+        res.json({ success: true, phone, exists });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get connection status
+router.get('/v1/status', apiKeyMiddleware, async (req, res) => {
+    try {
+        const instance = global.whatsappInstances.get(req.user.id);
+        
+        res.json({
+            success: true,
+            connected: instance?.isConnected || false,
+            phone: req.user.whatsappNumber,
+            limits: {
+                daily: req.user.dailyLimit,
+                usedToday: req.user.messagesUsedToday,
+                remaining: req.user.dailyLimit - req.user.messagesUsedToday
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get templates via API
+router.get('/v1/templates', apiKeyMiddleware, async (req, res) => {
+    try {
+        const templates = await db.Template.findAll({
+            where: { userId: req.user.id, isActive: true },
+            attributes: ['id', 'name', 'category', 'variables']
+        });
+
+        res.json({ success: true, templates });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Send using template
+router.post('/v1/message/send-template', apiKeyMiddleware, async (req, res) => {
+    try {
+        const { templateId, phone, variables } = req.body;
+
+        const template = await db.Template.findOne({
+            where: { id: templateId, userId: req.user.id, isActive: true }
+        });
+
+        if (!template) {
+            return res.status(404).json({ error: 'Template not found' });
+        }
+
+        const instance = global.whatsappInstances.get(req.user.id);
+        if (!instance || !instance.isConnected) {
+            return res.status(400).json({ error: 'WhatsApp not connected' });
+        }
+
+        // Replace variables
+        let message = template.content;
+        for (const [key, value] of Object.entries(variables || {})) {
+            message = message.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+        }
+
+        // Process spintax
+        if (template.useSpintax) {
+            message = instance.processSpintax(message);
+        }
+
+        const result = await instance.sendMessage(phone, message, {
+            mediaType: template.mediaType,
+            mediaUrl: template.mediaUrl
+        });
+
+        await template.update({ usageCount: template.usageCount + 1 });
+
+        res.json({
+            success: true,
+            messageId: result.messageId
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Webhook helper
+async function triggerWebhook(url, event, data) {
+    try {
+        await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event, data, timestamp: new Date() })
+        });
+    } catch (error) {
+        console.error('Webhook error:', error);
+    }
+}
+
+module.exports = router;
