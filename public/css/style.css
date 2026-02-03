@@ -1,0 +1,210 @@
+/* Custom styles for WhatsApp Bulk Sender */
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #4a5568 #1a202c;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #1a202c;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: #4a5568;
+    border-radius: 4px;
+}
+
+/* Navigation active state */
+.nav-link.active {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: white;
+}
+
+/* Section transitions */
+.section {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Media type button active state */
+.media-type-btn.active {
+    border-color: #10B981 !important;
+    color: #10B981;
+}
+
+/* Recipient type button active state */
+.recipient-type-btn.active {
+    border-color: #10B981 !important;
+}
+
+/* Tab active state */
+.contacts-tab.active,
+.campaign-filter.active {
+    background: #10B981 !important;
+}
+
+/* Progress circle animation */
+#progress-circle {
+    transition: stroke-dashoffset 0.5s ease-in-out;
+}
+
+/* Log messages */
+.log-success {
+    color: #10B981;
+}
+
+.log-error {
+    color: #EF4444;
+}
+
+.log-info {
+    color: #3B82F6;
+}
+
+.log-warning {
+    color: #F59E0B;
+}
+
+/* Group color button active */
+.group-color-btn.active {
+    border-color: white !important;
+    transform: scale(1.1);
+}
+
+/* Table row hover */
+tbody tr:hover {
+    background-color: rgba(55, 65, 81, 0.5);
+}
+
+/* Status badges */
+.badge-sent {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #10B981;
+}
+
+.badge-delivered {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #3B82F6;
+}
+
+.badge-read {
+    background-color: rgba(139, 92, 246, 0.2);
+    color: #8B5CF6;
+}
+
+.badge-failed {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #EF4444;
+}
+
+.badge-pending {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #F59E0B;
+}
+
+/* Card hover effect */
+.hover-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Pulse animation for connected status */
+.pulse-green {
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+}
+
+/* Mobile sidebar */
+@media (max-width: 768px) {
+    #sidebar.open {
+        transform: translateX(0);
+    }
+}
+
+/* Form checkbox styling */
+.form-checkbox {
+    appearance: none;
+    background-color: #374151;
+    border: 2px solid #4B5563;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-checkbox:checked {
+    background-color: #10B981;
+    border-color: #10B981;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+}
+
+/* Template card */
+.template-card {
+    transition: all 0.2s ease;
+}
+
+.template-card:hover {
+    border-color: #10B981;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 3px solid #374151;
+    border-top: 3px solid #10B981;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Toast notification customization */
+.notyf__toast {
+    border-radius: 8px !important;
+}
+
+/* QR Code container */
+#qr-container {
+    position: relative;
+}
+
+#qr-container::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 16px;
+    padding: 4px;
+    background: linear-gradient(135deg, #10B981, #3B82F6);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
